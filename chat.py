@@ -1,23 +1,27 @@
-from google import genai
-from google.genai import types
+from providers import create_provider
+from providers.base import BaseProvider
 
 
 class ChatSession:
-    def __init__(self, api_key: str, model: str, system_prompt: str):
-        self._client = genai.Client(api_key=api_key)
-        self._chat = self._client.chats.create(
+    def __init__(
+        self,
+        api_key: str,
+        model: str,
+        system_prompt: str,
+        provider: str = "gemini",
+    ):
+        self.current_provider = provider
+        self.current_model = model
+        self._provider: BaseProvider = create_provider(
+            provider=provider,
+            api_key=api_key,
             model=model,
-            config=types.GenerateContentConfig(system_instruction=system_prompt),
+            system_prompt=system_prompt,
         )
-        self.history: list[dict] = []
+
+    @property
+    def history(self) -> list[dict]:
+        return self._provider.history
 
     def send(self, message: str) -> str:
-        self.history.append({"role": "user", "content": message})
-        try:
-            response = self._chat.send_message(message)
-        except Exception as e:
-            self.history.pop()  # remove the unsent user message
-            raise RuntimeError(str(e)) from e
-        reply = response.text
-        self.history.append({"role": "model", "content": reply})
-        return reply
+        return self._provider.send(message)
