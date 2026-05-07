@@ -61,12 +61,18 @@ def handle_input(
                 new_session=None,
             )
 
-        new_session = ChatSession(
-            api_key=api_key,
-            model=model,
-            system_prompt=system_prompt,
-            provider=provider,
-        )
+        try:
+            new_session = ChatSession(
+                api_key=api_key,
+                model=model,
+                system_prompt=system_prompt,
+                provider=provider,
+            )
+        except Exception as e:
+            return HandleResult(
+                output=f"Failed to switch to {provider}/{model}: {e}",
+                new_session=None,
+            )
         return HandleResult(
             output=f"Switched to {provider}/{model}. Conversation history cleared.",
             new_session=new_session,
@@ -75,7 +81,7 @@ def handle_input(
     try:
         reply = session.send(user_input)
         return HandleResult(output=reply, new_session=None)
-    except RuntimeError as e:
+    except Exception as e:
         return HandleResult(output=f"Error: {e}", new_session=None)
 
 
@@ -119,7 +125,11 @@ def main():
         if not user_input:
             continue
 
-        result = handle_input(user_input, session, system_prompt, api_keys)
+        try:
+            result = handle_input(user_input, session, system_prompt, api_keys)
+        except KeyboardInterrupt:
+            print("\n^C (cancelled)\n")
+            continue
 
         if result.new_session is not None:
             session = result.new_session

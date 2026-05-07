@@ -57,6 +57,21 @@ def test_openai_send_accumulates_history_across_calls(mock_class):
 
 
 @patch("providers.openai.OpenAI")
+def test_openai_send_returns_empty_string_when_content_is_none(mock_class):
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value.choices[0].message.content = None
+    mock_class.return_value = mock_client
+    from providers.openai import OpenAIProvider
+    p = OpenAIProvider(api_key="key", model="gpt-4o", system_prompt="Help.")
+    result = p.send("Hello!")
+    assert result == ""
+    assert p.history == [
+        {"role": "user", "content": "Hello!"},
+        {"role": "assistant", "content": ""},
+    ]
+
+
+@patch("providers.openai.OpenAI")
 def test_openai_send_raises_runtime_error_on_api_failure(mock_class):
     mock_client = MagicMock()
     mock_client.chat.completions.create.side_effect = Exception("rate limit")

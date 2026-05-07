@@ -23,6 +23,6 @@ class OpenAIProvider(BaseProvider):
         except Exception as e:
             self.history.pop()
             raise RuntimeError(str(e)) from e
-        reply = response.choices[0].message.content
+        reply = response.choices[0].message.content or ""
         self.history.append({"role": "assistant", "content": reply})
         return reply

@@ -21,7 +21,7 @@ class ChatSession:
 
     @property
     def history(self) -> list[dict]:
-        return self._provider.history
+        return list(self._provider.history)
 
     def send(self, message: str) -> str:
         return self._provider.send(message)

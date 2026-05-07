@@ -17,9 +17,9 @@ class GeminiProvider(BaseProvider):
         self.history.append({"role": "user", "content": message})
         try:
             response = self._chat.send_message(message)
+            reply = response.text or ""
         except Exception as e:
             self.history.pop()
             raise RuntimeError(str(e)) from e
-        reply = response.text
         self.history.append({"role": "assistant", "content": reply})
         return reply

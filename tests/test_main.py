@@ -84,3 +84,31 @@ def test_handle_input_runtime_error_returned_as_output():
     result = handle_input("Hello", session, system_prompt=".", api_keys={})
     assert "quota exceeded" in result.output
     assert result.new_session is None
+
+
+def test_handle_input_arbitrary_exception_returned_as_error():
+    from main import handle_input
+    session = MagicMock()
+    session.send.side_effect = ConnectionError("network down")
+    result = handle_input("Hello", session, system_prompt=".", api_keys={})
+    assert "network down" in result.output
+    assert result.new_session is None
+
+
+def test_handle_input_model_switch_construction_failure_returns_error():
+    from main import handle_input
+
+    class FailingFake(FakeSession):
+        pass
+
+    with patch("main.ChatSession") as MockSession:
+        MockSession.side_effect = Exception("invalid model name")
+        session = FailingFake("gemini", "gemini-2.5-flash")
+        result = handle_input(
+            "/model openai/bogus-model",
+            session,
+            system_prompt=".",
+            api_keys={"openai": "sk-test"},
+        )
+    assert result.new_session is None
+    assert "invalid model name" in result.output

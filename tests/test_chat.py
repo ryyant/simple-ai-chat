@@ -42,6 +42,21 @@ def test_send_accumulates_history_across_calls(mock_genai):
 
 
 @patch("providers.gemini.genai")
+def test_history_external_mutation_does_not_affect_provider(mock_genai):
+    mock_chat = MagicMock()
+    mock_chat.send_message.return_value.text = "reply"
+    mock_genai.Client.return_value.chats.create.return_value = mock_chat
+    from chat import ChatSession
+    session = ChatSession(provider="gemini", api_key="key", model="gemini-2.5-flash", system_prompt="Help.")
+    session.send("Hello")
+    session.history.clear()
+    session.history.append({"role": "user", "content": "injected"})
+    assert len(session.history) == 2
+    assert session.history[0] == {"role": "user", "content": "Hello"}
+    assert session.history[1] == {"role": "assistant", "content": "reply"}
+
+
+@patch("providers.gemini.genai")
 def test_send_raises_runtime_error_on_api_failure(mock_genai):
     mock_chat = MagicMock()
     mock_chat.send_message.side_effect = Exception("API quota exceeded")
