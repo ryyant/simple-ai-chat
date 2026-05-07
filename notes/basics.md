@@ -123,24 +123,65 @@ Gives the model access to external knowledge at inference time.
 
 ## Agents & Multi-Agent Systems
 
-An agent is an LLM in a loop — it perceives input, reasons, acts via tools, and repeats until the task is done.
+An **agent** is an LLM in a loop — perceive → plan → act (tool call) → observe → repeat.
 
-**Agentic loop:** Perceive → Plan → Act (tool call) → Observe result → Repeat
+**Core:** LLM, tools, memory (context window + optional external store), system prompt.
 
-**Core components**
-- LLM (reasoning engine)
-- Tools (what it can do)
-- Memory (context window + optional external store)
-- System prompt (role + instructions)
+**Workflow patterns** (Anthropic, *Building effective agents*)
+- **Prompt chaining** — sequential steps; output of one feeds the next
+- **Routing** — classify input, dispatch to a specialised handler
+- **Parallelisation** — independent subtasks concurrently. *Sectioning* (split a task) or *voting* (redundancy for accuracy)
+- **Orchestrator–workers** — lead LLM decomposes at runtime, delegates to workers
+- **Evaluator–optimiser** — one LLM produces, another critiques in a loop
 
-**Multi-agent patterns**
-- Orchestrator + workers — one agent plans and delegates, workers execute
-- Parallel agents — independent tasks split across agents simultaneously
-- Specialist agents — each agent has a focused role (researcher, coder, reviewer)
+> Workflows are deterministic orchestration. *Agents* are workflows where the LLM chooses its own path.
 
-**Subagents**
-- Run in isolated contexts (own context window), return a summary to the parent
-- Use when: task is parallelisable, or you want to protect the main context from large outputs
+---
+
+### Approaches to parallel work
+
+| Approach | Mechanism | When to use |
+|---|---|---|
+| **Single session** | One Claude, one context | Most tasks |
+| **Worktrees / parallel terminals** | Separate repo checkouts, separate sessions, zero awareness | Independent features that don't touch the same code |
+| **Subagents** | Lead spawns workers via the `Agent` tool (formerly `Task`); workers report back, can't talk to each other | Parallelisable subtasks with no inter-dependency |
+| **Agent Teams** | Agents with own contexts but a *shared* task list / state; they observe each other and adapt | Coordinating work: shared files, dependent changes, cross-cutting refactors |
+
+```
+Subagents — one-way, report back
+Lead ─┬─ A → reports back
+      ├─ B → reports back
+      └─ C → reports back
+
+Agent Teams — peer-aware, shared state
+Lead ─┬─ A ──┐
+      ├─ B ──┼── shared task list / state
+      └─ C ──┘
+```
+
+Agent Teams aren't a built-in Claude Code primitive — realised via shared file, external task tracker, or frameworks (CrewAI, AutoGen, Cline-style team modes).
+
+---
+
+**When to dispatch a subagent**
+- **Single** — one well-scoped task that doesn't need the parent's full context, or produces noisy output (search results, file dumps)
+- **Sequential** — ordered steps; pass a *summary* of the prior step into the next brief, not the raw transcript. Verify each handoff — quality compounds
+- **Parallel** — 2+ truly independent tasks. Don't use for related failures or cross-cutting changes (renaming an API across files — that's an Agent Team)
+
+**Dispatching in parallel**
+1. Confirm independence — would changing one alter the others?
+2. Write one self-contained prompt per subagent (paths, constraints, output format, length cap)
+3. Send all `Agent` calls in a *single* assistant turn — separate turns run sequentially
+4. On return: read each summary, spot-check edits, run tests, check for conflicts on shared files
+
+**Briefing a subagent** (starts cold, prompt must be self-contained)
+- Goal, file paths, what's been ruled out
+- Scope ("review `providers/`" not "the codebase")
+- Constraints ("don't change production code", "under 400 words")
+- Structured return ("numbered findings: `file:line` — issue — fix")
+- Whether to write code or just research — it can't infer
+
+**Common mistakes:** too broad (subagent gets lost) · no context (doesn't know where to look) · no constraints (refactors more than asked) · vague output spec (can't tell what changed) · trusting summaries blindly.
 
 ---
 
