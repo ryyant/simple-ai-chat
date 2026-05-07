@@ -1,6 +1,14 @@
 # llm-chatbots
 
-A simple command-line AI chat program in Python, using the Google Gemini API (free tier).
+A command-line AI chat program in Python supporting multiple LLM providers with runtime model switching.
+
+## Supported Providers
+
+| Provider | Models | Free tier |
+|----------|--------|-----------|
+| Google Gemini | `gemini-2.5-flash`, `gemini-2.0-flash`, ... | [aistudio.google.com](https://aistudio.google.com) |
+| OpenAI | `gpt-4o`, `gpt-4o-mini`, ... | [platform.openai.com](https://platform.openai.com) |
+| Anthropic | `claude-opus-4-7`, `claude-sonnet-4-6`, ... | [console.anthropic.com](https://console.anthropic.com) |
 
 ## Setup
 
@@ -9,18 +17,21 @@ A simple command-line AI chat program in Python, using the Google Gemini API (fr
    pip install -r requirements.txt
    ```
 
-2. Copy `.env.example` to `.env` and fill in your API key:
+2. Copy `.env.example` to `.env` and fill in your keys:
    ```bash
    cp .env.example .env
    ```
 
    ```
-   GEMINI_API_KEY=your_api_key_here
-   GEMINI_MODEL=gemini-2.5-flash
+   PROVIDER=gemini              # gemini | openai | anthropic
+   GEMINI_API_KEY=your_key
+   OPENAI_API_KEY=your_key
+   ANTHROPIC_API_KEY=your_key
+   MODEL=                       # leave blank to use the default for the provider
    SYSTEM_PROMPT=You are a helpful assistant.
    ```
 
-   Get a free Gemini API key at [aistudio.google.com](https://aistudio.google.com).
+   You only need the API key for the provider(s) you plan to use.
 
 ## Usage
 
@@ -30,6 +41,17 @@ python main.py
 
 Type your message and press Enter. Use `Ctrl+C` or `Ctrl+D` to quit.
 
+### Switching models at runtime
+
+```
+/model                              # show current provider and model
+/model openai/gpt-4o                # switch to OpenAI GPT-4o
+/model anthropic/claude-opus-4-7    # switch to Anthropic Claude
+/model gemini/gemini-2.5-flash      # switch back to Gemini
+```
+
+Switching starts a fresh conversation (history is cleared).
+
 ## Running Tests
 
 ```bash
@@ -38,5 +60,17 @@ python -m pytest
 
 ## Project Structure
 
-- `main.py` — entry point; loads `.env`, starts the chat REPL
-- `chat.py` — `ChatSession` class; manages conversation history and Gemini API calls
+```
+main.py                  # REPL entry point; handle_input() for /model command
+chat.py                  # ChatSession: thin wrapper over provider
+providers/
+  base.py                # BaseProvider ABC
+  gemini.py              # GeminiProvider
+  openai.py              # OpenAIProvider
+  anthropic.py           # AnthropicProvider
+  __init__.py            # create_provider() factory
+tests/
+  test_chat.py
+  test_main.py
+  test_providers_*.py
+```
