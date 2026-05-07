@@ -1,4 +1,4 @@
-# simple-ai-chat
+# llm-chatbots
 
 A simple command-line AI chat program in Python, using the Google Gemini API (free tier).
 
