@@ -10,14 +10,24 @@ A command-line AI chat program in Python supporting multiple LLM providers with 
 | OpenAI | `gpt-4o`, `gpt-4o-mini`, ... | [platform.openai.com](https://platform.openai.com) |
 | Anthropic | `claude-opus-4-7`, `claude-sonnet-4-6`, ... | [console.anthropic.com](https://console.anthropic.com) |
 
+## Requirements
+
+Python 3.10+
+
 ## Setup
 
-1. Install dependencies:
+1. Create and activate a virtual environment:
+   ```bash
+   python3.10 -m venv venv
+   source venv/bin/activate
+   ```
+
+2. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-2. Copy `.env.example` to `.env` and fill in your keys:
+3. Copy `.env.example` to `.env` and fill in your keys:
    ```bash
    cp .env.example .env
    ```
@@ -36,6 +46,9 @@ A command-line AI chat program in Python supporting multiple LLM providers with 
 ## Usage
 
 ```bash
+# activate the venv first if not already active
+source venv/bin/activate
+
 python main.py
 ```
 
@@ -55,7 +68,8 @@ Switching starts a fresh conversation (history is cleared).
 ## Running Tests
 
 ```bash
-python -m pytest
+python -m pytest        # run all tests
+python -m pytest tests/test_foo.py::test_bar   # run a single test
 ```
 
 ## Project Structure

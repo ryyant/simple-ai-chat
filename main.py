@@ -1,5 +1,5 @@
 import os
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 from dotenv import load_dotenv
 from chat import ChatSession
 
@@ -20,7 +20,7 @@ API_KEY_ENV_VARS = {
 
 class HandleResult(NamedTuple):
     output: str
-    new_session: ChatSession | None
+    new_session: Optional[ChatSession]
 
 
 def handle_input(
@@ -104,7 +104,10 @@ def main():
         provider=provider,
     )
 
-    print(f"Chat started ({provider}/{model}). /model to check, /model <provider>/<model> to switch. Ctrl+C to quit.\n")
+    print(f"Chat started ({provider}/{model}).")
+    print(f"  /model                          show current model")
+    print(f"  /model <provider>/<model>       switch model (providers: gemini, openai, anthropic)")
+    print(f"  Ctrl+C                          quit\n")
 
     while True:
         try:

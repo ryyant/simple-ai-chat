@@ -8,7 +8,15 @@ A command-line AI chat program written in Python, supporting multiple LLM provid
 
 ## Setup & Commands
 
+Requires Python 3.10+. Use the project venv.
+
 ```bash
+# Create venv (first time only)
+python3.10 -m venv venv
+
+# Activate venv
+source venv/bin/activate
+
 # Install dependencies
 pip install -r requirements.txt
 
