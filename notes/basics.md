@@ -32,6 +32,22 @@ For system prompts, use all sections and separate them with XML tags (`<instruct
 
 ---
 
+## Prompt Caching
+
+Cache stable parts of your prompt to cut latency and cost on repeated calls.
+
+| | Anthropic | OpenAI |
+|---|---|---|
+| **How** | Mark with `cache_control: {"type": "ephemeral"}` on a content block | Automatic — no markup needed |
+| **Min size** | 1024 tokens | 1024 tokens |
+| **TTL** | 5 minutes | ~5 minutes |
+| **Cost** | Write: +25% / Read: −90% vs base input | Read: −50% vs base input |
+
+**What to cache** — system prompts, tool definitions, large documents, few-shot examples.  
+**Key rule** — cached content must be a stable prefix; anything after the breakpoint is not cached.
+
+---
+
 ## Guardrails
 
 A safety layer that constrains, monitors, or redirects model behaviour to keep outputs safe, accurate, and aligned.
@@ -105,6 +121,29 @@ Gives the model access to external knowledge at inference time.
 
 ---
 
+## Agents & Multi-Agent Systems
+
+An agent is an LLM in a loop — it perceives input, reasons, acts via tools, and repeats until the task is done.
+
+**Agentic loop:** Perceive → Plan → Act (tool call) → Observe result → Repeat
+
+**Core components**
+- LLM (reasoning engine)
+- Tools (what it can do)
+- Memory (context window + optional external store)
+- System prompt (role + instructions)
+
+**Multi-agent patterns**
+- Orchestrator + workers — one agent plans and delegates, workers execute
+- Parallel agents — independent tasks split across agents simultaneously
+- Specialist agents — each agent has a focused role (researcher, coder, reviewer)
+
+**Subagents**
+- Run in isolated contexts (own context window), return a summary to the parent
+- Use when: task is parallelisable, or you want to protect the main context from large outputs
+
+---
+
 ## Claude Code Concepts
 
 | Concept | What it is | When to use |
@@ -113,6 +152,13 @@ Gives the model access to external knowledge at inference time.
 | **Agents** | Autonomous workers Claude spawns for complex, multi-step tasks; run in parallel in isolated contexts | Parallel or long-running tasks |
 | **MCP** | Interface connecting Claude to external tools, DBs, or APIs (GitHub, Jira, SQL) | Read/write to external services |
 | **Plugins** | Bundle of agents + skills + MCP configs as a single installable package | Share a customised setup across a team or repo |
+| **Hooks** | Shell commands that fire automatically on Claude Code events | Automate side-effects like formatting, linting, or notifications |
+
+### Hooks
+
+Configured in `.claude/settings.json` (project) or `~/.claude/settings.json` (global). Events: `PreToolUse`, `PostToolUse`, `Notification`, `Stop`.
+
+Common uses: auto-format/lint after edits, run tests, log tool calls, send notifications on task completion.
 
 ---
 
